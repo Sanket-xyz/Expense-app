@@ -752,21 +752,22 @@
     .quick-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 2px;
+      gap: 10px;
+      margin-top: 6px;
     }
 
     .quick-chip {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 10px;
+      font-size: 15px;
+      font-weight: 700;
+      min-height: 42px;
+      padding: 9px 18px;
       border: 1px solid var(--border);
       border-radius: var(--radius-pill);
-      color: var(--fg-muted);
+      color: var(--fg);
       background: var(--surface);
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
       transition: all 0.12s;
     }
 
@@ -1563,7 +1564,6 @@ function doPost(e) {
       $('nameChips').innerHTML = top.map(item =>
         `<button type="button" class="quick-chip" data-pick-name="${escapeHtml(item.displayName)}">
           <span>${escapeHtml(item.displayName)}</span>
-          <span class="chip-count">&times;${item.count}</span>
         </button>`
       ).join('');
     }
@@ -2035,8 +2035,13 @@ function doPost(e) {
       $('fieldId').value = isEdit ? expense.id : '';
       $('fieldName').value = isEdit ? expense.name : '';
       $('fieldAmount').value = isEdit ? Number(expense.amount).toFixed(2) : '';
-      // Always autofill today's local date by default when adding a new expense
-      $('fieldDate').value = isEdit ? expense.date : getLocalTodayStr();
+      // Autofill the date of the latest added record by default (fallback to today if none exist)
+      const latestRecord = state.expenses.reduce((latest, cur) => {
+        if (!cur || !cur.date) return latest;
+        if (!latest) return cur;
+        return (cur.created_at || '') >= (latest.created_at || '') ? cur : latest;
+      }, null);
+      $('fieldDate').value = isEdit ? expense.date : (latestRecord ? latestRecord.date : getLocalTodayStr());
 
       $('deleteExpenseBtn').hidden = !isEdit;
       populateNameSuggestions(isEdit ? expense.name : '');
